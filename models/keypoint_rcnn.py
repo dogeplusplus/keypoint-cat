@@ -118,7 +118,12 @@ class KeypointRCNN(nn.Module):
         scores, boxes = self.rpn(feats)
         aligned = self.roi_align(feats, list(boxes))
 
+        # Apply softmax across spatial dimensions to encourage single keypoint
         keypoint_mask = self.keypoint_head(aligned)
+        h, w = keypoint_mask.shape[-2:]
+        keypoint_mask = rearrange(keypoint_mask, "b c h w -> b c (h w)")
+        keypoint_mask = nn.Softmax(dim=-1)(keypoint_mask)
+        keypoint_mask = rearrange(keypoint_mask, "b c (h w) -> b c h w", h=h, w=w)
 
         flat = nn.Flatten()(aligned)
         flat_feats = self.class_box_backbone(flat)

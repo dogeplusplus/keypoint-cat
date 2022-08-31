@@ -3,8 +3,6 @@ import cv2
 import json
 import torch
 import random
-import typing as t
-import torch.nn as nn
 import albumentations as A
 import matplotlib.pyplot as plt
 
@@ -99,12 +97,8 @@ def main():
     images = os.listdir(folder)
 
     image_path = random.choice(images)
-    image_name = Path(image_path).name
     image = cv2.imread(os.path.join(folder, image_path))
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    kp = keypoints[image_name]
-
-    # render_keypoints(image, kp, SKELETON)
 
     mobile_net = torch.hub.load("pytorch/vision:v0.10.0", "mobilenet_v2", pretrained=True)
     backbone = list(mobile_net.children())[0]
@@ -143,7 +137,7 @@ def main():
     )
 
     for batch in data_loader:
-        pred = net(batch["image"])
+        keypoint_mask, bounding_boxes, class_labels = net(batch["image"])
 
 
 if __name__ == "__main__":
